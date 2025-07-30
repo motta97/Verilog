@@ -12,4 +12,5 @@ generate
         1: adder1bit adder1(co,sum,a0,a1,ci);
         2: adder2bit adder1(co,sum,a0,a1,ci);
         default: adder_cla (#N) adder1(co,sum,a0,a1,ci);
+    endcase
 endgenerate
