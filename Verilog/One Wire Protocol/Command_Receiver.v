@@ -53,8 +53,8 @@ if(en_cmd_recieve)begin
     end
     //last bit will end at 588
     if(counter ==568) begin
-        counter =0;
-        done_recieving=1'b1;
+        counter <=0;
+        done_recieving<=1'b1;
     end
 
 
