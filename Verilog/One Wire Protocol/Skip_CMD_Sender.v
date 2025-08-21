@@ -1,9 +1,11 @@
 module skip_cmd_sender(
     input clk,
     input en_skip_cmd_sender,
+    output reg master_pull_low,
     output reg done_skip_cmd_sending,
-    output reg bus
+    input bus
 );
+
 integer counter =0;
 //cc-->11001100
 always@(posedge clk)begin
@@ -12,76 +14,76 @@ if(en_skip_cmd_sender)begin
 done_skip_cmd_sending<=1'b0;
 //send 1
 if(counter<60)begin
-    bus<=1'bz;
+    master_pull_low<=1'b0;
     counter<=counter+1;
 end
 else if(counter<71)begin
     counter<=counter+1;
-    bus=1'bz;
+   master_pull_low<=1'b0;
 end
 //send 1
 else if(counter<131)begin//71+60
 
     counter<=counter+1;
-    bus=1'bz;
+    master_pull_low<=1'b0;
 
 end
 else if(counter<142)begin
     counter<=counter+1;
-    bus=1'bz;
+    master_pull_low<=1'b0;
 end
 //send 0
 else if(counter<202)begin
-    bus<=1'b0;
+    master_pull_low<=1'b1;
     counter<=counter+1;
 end
 else if(counter<213)begin
-    bus<=1'bz;
+    master_pull_low<=1'b0;
     counter<=counter+1;
 end
 //send 0
 else if(counter<273)begin
-    bus<=1'b0;
+    master_pull_low<=1'b1;
     counter<=counter+1;
 end
 else if(counter<284)begin
-    bus<=1'bz;
+    master_pull_low<=1'b0;
     counter<=counter+1;
 end
 //send1
 else if(counter<344)begin
     counter<=counter+1;
-    bus=1'bz;
+    master_pull_low<=1'b0;
 end
 else if(counter<355)begin
     counter<=counter+1;
-    bus=1'bz;
+   master_pull_low<=1'b0;
 end
 //send1
 else if(counter<415)begin
     counter<=counter+1;
-    bus=1'bz;
+   master_pull_low<=1'b0;
 end
 else if(counter<426)begin
     counter<=counter+1;
-    bus=1'bz;
+   master_pull_low<=1'b0;
 end
 //send 0
 else if(counter<486)begin
-    bus<=1'b0;
+    master_pull_low<=1'b1;
     counter<=counter+1;
 end
 else if(counter<497)begin
-    bus<=1'bz;
+    master_pull_low<=1'b0;
     counter<=counter+1;
 end
 //send0
 else if(counter<557)begin
-    bus<=1'b0;
+    master_pull_low<=1'b1;
     counter<=counter+1;
 end
 else if(counter<568)begin
-    bus<=1'bz;
+   master_pull_low<=1'b0;
     counter<=counter+1;
 end
 else begin
@@ -89,7 +91,7 @@ counter<=counter+1;
 end
 if(counter==568)begin
 counter<=0;
-done_skip_cmd_sending=1'b1;
+done_skip_cmd_sending<=1'b1;
 end
 
 end

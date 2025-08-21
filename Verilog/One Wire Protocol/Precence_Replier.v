@@ -1,6 +1,7 @@
 module precence_replier(
     input clk,
-    output reg bus,
+     input bus,
+     output reg slave_pull_low,
     input en_precence,
     output reg done_precence
 );
@@ -9,12 +10,13 @@ always@(posedge clk)begin
 if(en_precence==1'b1)begin
 
 if(counter <=15) begin
-bus<=1'bz;
+slave_pull_low<=1'b0;
+
 counter<=counter +1;
 done_precence<=1'b0;
 end
 else if(counter <=85)begin //85 =60+15
-bus<=1'b0;
+slave_pull_low<=1'b0;
 counter<=counter +1;
 done_precence=1'b0;
 end

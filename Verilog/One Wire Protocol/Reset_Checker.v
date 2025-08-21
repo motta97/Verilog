@@ -1,6 +1,6 @@
 module reset_checker(
     input clk,
-    inout bus,
+    input bus,
     input en_check,
     output reg reset_found
 );

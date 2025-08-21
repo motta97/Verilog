@@ -1,6 +1,7 @@
 
 module slave(
-    inout bus,
+    input bus,
+    output reg slave_pull_low,
     input clk,
     input reset,
     input en_slave
@@ -15,7 +16,7 @@ parameter S_IDLE = 3'b000,
           S_READ_DATA = 3'b110;
 
         reg [55:0] ROM_ID;
-        reg [63:0] ROM_ID_WITH_CRC;
+        wire [63:0] ROM_ID_WITH_CRC;
         wire [63:0] Received_ROM;
         wire [63:0] memory;
         wire [7:0]frame;
@@ -34,21 +35,36 @@ parameter S_IDLE = 3'b000,
         wire done_recieving_rom;
         reg en_data_read;
         wire done_reading_data;
+        wire slave_pull_low_wire,
+        slave_pull_low_wire1,
+        slave_pull_low_wire2,
+        slave_pull_low_wire3;
+
         reset_checker reset_checker0(clk,bus,en_check_reset,reset_found);
-        precence_replier p(clk,bus,en_precence,done_precence);
+        precence_replier p(clk,bus,slave_pull_low_wire1,en_precence,done_precence);
         cmd_reciever c(clk,bus,frame,en_cmd_recieve,done_recieving);
-        rom_sender rom_sender0(clk,bus,ROM_ID_WITH_CRC,en_rom_sender,done_sending_rom);
-        rom_reciever rom_reciever0(clk,bus,en_rom_reciever,Received_ROM,done_recieving_rom);
+        rom_sender rom_sender0(clk,bus,slave_pull_low_wire2,ROM_ID_WITH_CRC,en_rom_sender,done_sending_rom);
+        rom_reciever rom_reciever0(clk,bus,slave_pull_low_wire3,Received_ROM,done_recieving_rom);
         data_reader d(clk,bus,en_data_read,done_reading_data,memory);
         crc8_address crc(ROM_ID,ROM_ID_WITH_CRC);
 
+        assign slave_pull_low_wire = (slave_pull_low_wire1|slave_pull_low_wire1|slave_pull_low_wire2|slave_pull_low_wire3)?1'b1:1'b0;
+always@(*)begin
+    slave_pull_low<=slave_pull_low_wire;
+
+end
 always@(posedge clk)begin
-    if(reset)begin
+
+ if(reset)begin
         next_state<=S_IDLE;
         current_state <= next_state;
     end
-
+end
+always@(posedge clk)begin
+   
+    
     case(current_state) 
+      
         S_IDLE: begin 
             if(en_slave)begin
                 en_check_reset<=1'b1;
@@ -153,8 +169,15 @@ always@(posedge clk)begin
 
         end
 
+  default: begin
 
+                            next_state=S_IDLE;
+                            current_state=next_state;
+                end
     endcase
+    
+   
+    
 end
 
 

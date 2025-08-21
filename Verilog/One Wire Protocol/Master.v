@@ -1,6 +1,7 @@
 module master(
     inout bus,
     input clk,
+    output reg master_pull_low,
     input reset,
     input en_master
 );
@@ -12,6 +13,7 @@ parameter
             S_ROM_CMD=3'b011,
             S_RECV_DATA_ROM=3'b100,
             S_SEND_DATA=3'b101,
+            S_RESET_HIGH=3'b110,
             rom_command=8'b00110011,
             index_Rom_match=0;
 reg [63:0] data_mem;
@@ -28,9 +30,18 @@ wire
             done_sending_data,
             done_rom_cmd_sending,
             done_skip_cmd_sending;
-
+wire [63:0]rom_mem;
+wire master_pull_low_wire,
+    master_pull_low_wire1,
+    master_pull_low_wire2,
+    master_pull_low_wire3,
+    master_pull_low_wire4,
+    master_pull_low_wire5,
+    master_pull_low_wire6,
+    master_pull_low_wire7,
+    master_pull_low_wire8;
 reg     
-            [63:0]rom_mem,
+            
             en_send_reset,
             en_wait_precence,
             en_read_rom,
@@ -40,48 +51,57 @@ reg
             en_rom_cmd_sender,
             en_skip_cmd_sender;
 
-reset_sender rst_snd(clk,en_send_reset,done_sending_reset,bus);
-precence_waiter pr(clk,bus,en_wait_precence,done_wait_precence,found_precence);
-rom_reader romr(clk,bus,en_read_rom,done_reading_rom,rom_mem);
-rom_cmd_sender romcmdsnd(clk,en_rom_cmd_sender,done_rom_cmd_sending,bus);
-skip_cmd_sender skipcmdsnd(clk,en_skip_cmd_sender,done_skip_cmd_sending,bus);
-match_cmd_sender matchcmdsnd(clk,en_match_cmd_sender,done_match_cmd_sending,bus);
+reset_sender rst_snd(clk,en_send_reset,master_pull_low_wire1,done_sending_reset,bus);
+precence_waiter pr(clk,bus,en_wait_precence,master_pull_low_wire2,done_wait_precence,found_precence);
+rom_reader romr(clk,bus,master_pull_low_wire3,en_read_rom,done_reading_rom,rom_mem);
+rom_cmd_sender romcmdsnd(clk,en_rom_cmd_sender,master_pull_low_wire4,done_rom_cmd_sending,bus);
+skip_cmd_sender skipcmdsnd(clk,en_skip_cmd_sender,master_pull_low_wire5,done_skip_cmd_sending,bus);
+match_cmd_sender matchcmdsnd(clk,en_match_cmd_sender,master_pull_low_wire6,done_match_cmd_sending,bus);
 //we can use the same module rom_sender to send the rom for the slave in case of the Match Rom command
-rom_sender match_rom(clk,bus,rom_mem[index_Rom_match],en_match_rom,done_matching_rom);
+rom_sender match_rom(clk,bus,master_pull_low_wire7,rom_mem,en_match_rom,done_matching_rom);
 //we can also use the same module for sending data to the slave
-rom_sender send_data(clk,bus,data_mem,en_sending_data,done_sending_data);
+rom_sender send_data(clk,bus,master_pull_low_wire8,data_mem,en_sending_data,done_sending_data);
+assign master_pull_low_wire=(master_pull_low_wire1|master_pull_low_wire2|
+    master_pull_low_wire3|master_pull_low_wire4|master_pull_low_wire5|master_pull_low_wire6|master_pull_low_wire7
+    |master_pull_low_wire8
+)? 1'b1:1'b0;
+    always@(*)begin
+        master_pull_low<=master_pull_low_wire;
 
-    
-always@(posedge clk)begin
-    if(reset)begin
+
+    end
+    always@(posedge clk)begin
+     if(reset)begin
         next_state=S_IDLE;
         current_state=next_state;
     end
-    else begin
-
+    end
+always@(*)begin
+   
         case(current_state)
+         
             S_IDLE:
                 begin
                     if(en_master)begin
-                        next_state=S_RESET;
-                        current_state=next_state;
+                        next_state<=S_RESET;
+                        current_state<=next_state;
                     end
                     else begin
-                        next_state=S_IDLE;
-                        current_state=next_state;
+                        next_state<=S_IDLE;
+                        current_state<=next_state;
                     end
                 end
             S_RESET:
                 begin
-                    en_send_reset=1'b1;
+                    en_send_reset<=1'b1;
                     if(done_sending_reset)begin
                         en_send_reset=1'b0;
-                        next_state=S_WIAT_PRESENCE;
-                        current_state=next_state;
+                        next_state<=S_WIAT_PRESENCE;
+                        current_state<=next_state;
                     end
                     else begin
-                        next_state=S_RESET;
-                        current_state=next_state;
+                        next_state<=S_RESET;
+                        current_state<=next_state;
                     end
 
                 end
@@ -89,21 +109,21 @@ always@(posedge clk)begin
                 begin
                     en_wait_precence=1'b1;
                     if(done_wait_precence)begin
-                        en_wait_precence=1'b0;
+                        en_wait_precence<=1'b0;
                         if(found_precence)begin
 
-                            next_state=S_ROM_CMD;
-                            current_state=next_state;
+                            next_state<=S_ROM_CMD;
+                            current_state<=next_state;
                         end
                         else begin
-                            next_state=S_RESET;
-                            current_state=next_state;
+                            next_state<=S_RESET;
+                            current_state<=next_state;
                         end
                             //if precence wasn't found, it gets back to the reset signal state
                     end
                     else begin
-                        next_state=S_WIAT_PRESENCE;
-                        current_state=next_state;
+                        next_state<=S_WIAT_PRESENCE;
+                        current_state<=next_state;
                     end
                 end
 
@@ -118,17 +138,17 @@ always@(posedge clk)begin
                             en_read_rom=1'b1;
                             if(done_reading_rom)begin
                                 en_read_rom=1'b0;
-                                next_state=S_SEND_DATA;
-                                current_state=next_state;
+                                next_state<=S_SEND_DATA;
+                                current_state<=next_state;
                             end
                             else begin
-                                next_state=S_ROM_CMD;
-                                current_state=next_state;
+                                next_state<=S_ROM_CMD;
+                                current_state<=next_state;
                             end
                         end
                         else begin
-                                next_state=S_ROM_CMD;
-                                current_state=next_state;
+                                next_state<=S_ROM_CMD;
+                                current_state<=next_state;
 
                         end
                         
@@ -159,14 +179,14 @@ always@(posedge clk)begin
                                 current_state<=next_state;
                             end
                             else begin
-                                next_state=S_ROM_CMD;
-                                current_state=next_state;
+                                next_state<=S_ROM_CMD;
+                                current_state<=next_state;
 
                             end
                         end
                         else begin
-                                next_state=S_ROM_CMD;
-                                current_state=next_state;
+                                next_state<=S_ROM_CMD;
+                                current_state<=next_state;
 
                             end
                     end
@@ -177,19 +197,25 @@ always@(posedge clk)begin
                         en_sending_data=1'b1;
                         if(done_sending_data)begin
                             en_sending_data=1'b0;
-                            next_state=S_RESET;
-                            current_state=next_state;
+                            next_state<=S_RESET;
+                            current_state<=next_state;
                         end
                         else begin
-                            next_state=S_SEND_DATA;
-                            current_state=next_state;
+                            next_state<=S_SEND_DATA;
+                            current_state<=next_state;
                         end
 
 
                     end
+                default: begin
+
+                            next_state<=S_IDLE;
+                            current_state<=next_state;
+                end
 
         endcase
-    end
+    
+    
 
 
 

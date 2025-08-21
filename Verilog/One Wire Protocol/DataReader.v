@@ -11,7 +11,7 @@ module data_reader(
     always@(posedge clk)begin
 
         if(en_data_read==1'b1)begin
-            done_reading_data=1'b0;
+            done_reading_data<=1'b0;
             if(counter <30)begin
             counter<=counter +1;
 
@@ -32,15 +32,15 @@ module data_reader(
 
             if(counter==60)begin
                 counter<=0;
-                index=index+1;
-                counter_num_of_bits=counter_num_of_bits+1;
+                index<=index+1;
+                counter_num_of_bits<=counter_num_of_bits+1;
             end
 
             if(counter_num_of_bits==64)begin
                 counter<=0;
                 index<=0;
                 counter_num_of_bits<=0;
-                done_reading_data=1'b1;
+                done_reading_data<=1'b1;
 
 
             end

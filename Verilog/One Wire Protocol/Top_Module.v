@@ -5,9 +5,12 @@ module transciever(
     input reset
 );
 reg en_master,en_slave;
-master m1(bus,clk,reset,en_master);
-slave s1(bus,clk,reset,en_slave);
+wire master_pull_low, slave_pull_low;
 
+master m1(bus,clk,master_pull_low,reset,en_master);
+slave s1(bus,slave_pull_low,clk,reset,en_slave);
+assign bus = (master_pull_low | slave_pull_low) ? 1'b0 : 1'bz;
+pullup(bus);
 always@(posedge clk)begin
 
 case(mode)

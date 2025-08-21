@@ -1,23 +1,24 @@
 module rom_reader(
     input clk,
-    inout bus,
+    input bus,
+    output reg master_pull_low,
     input en_read_rom,
     output reg done_reading_rom,
     output reg [63:0]rom_mem
 );
+
+  // your FSM sets drive_low=1 only during low pulses; otherwise 0
+  
 integer counter =0;
 integer index2=0;
-reg drive_bus;
-initial begin
-    assign drive_bus=bus;
-end
+
 always@(posedge clk)begin
 
 if(en_read_rom)begin
 
     if(counter<6)begin
         counter<=counter+1;
-        drive_bus<=1'b0;
+        master_pull_low<=1'b1;
     end
     else if(counter ==15) begin
         if(bus==1'b1)begin

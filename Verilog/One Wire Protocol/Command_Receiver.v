@@ -1,6 +1,6 @@
 module cmd_reciever(
     input clk,
-    inout bus,
+    input bus,
     output reg [7:0] frame,
     input en_cmd_recieve,
     output reg done_recieving
